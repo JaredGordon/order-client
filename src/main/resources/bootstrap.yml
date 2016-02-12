@@ -1,0 +1,17 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: quote-client
+    
+eureka:
+  client:
+    registerWithEureka: false
+---
+spring:
+    profiles: cloud
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER}
