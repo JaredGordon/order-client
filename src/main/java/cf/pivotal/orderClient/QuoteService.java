@@ -13,20 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cf.pivotal.accountClient;
+package cf.pivotal.orderClient;
 
+import java.util.List;
+import java.util.Set;
 
-public interface AccountProfileService {
+public interface QuoteService {
 
-    void deletelAccountProfile(Accountprofile accountProfile);
+	long countAllQuotes();
 
-    Accountprofile findAccountProfile(Long id);
+	void deleteQuote(Quote quote);
 
-    Accountprofile saveAccountProfile(Accountprofile accountProfile);
+	List<Quote> findAllQuotes();
 
-    Accountprofile findByUserid(String username);
+	List<Quote> topGainers();
 
-    Accountprofile findByUseridAndPasswd(String userId, String passwd);
+	List<Quote> topLosers();
 
-    Accountprofile findByAuthtoken(String authtoken);
+	List<Quote> findBySymbolIn(Set<String> symbols);
+
+	Quote saveQuote(Quote quote);
+
+	Quote findBySymbol(String symbol);
+
+	MarketSummary marketSummary();
+
 }

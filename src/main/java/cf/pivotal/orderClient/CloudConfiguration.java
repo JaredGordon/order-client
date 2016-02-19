@@ -1,4 +1,4 @@
-package cf.pivotal.accountClient;
+package cf.pivotal.orderClient;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;

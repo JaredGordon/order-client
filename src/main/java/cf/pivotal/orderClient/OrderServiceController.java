@@ -13,16 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cf.pivotal.accountClient;
+package cf.pivotal.orderClient;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-public interface AccountService {
+import java.util.List;
 
-    void deleteAccount(Account account);
+@Service
+public class OrderServiceController implements OrderService {
 
-    Account findAccount(Long id);
+    @Autowired
+    OrderRepository orderRepository;
 
-    Account saveAccount(Account account);
+    public Order findOrder(Long id) {
+        return orderRepository.find(id);
+    }
 
-    Account findByProfile(Accountprofile accountprofile);
+    public Order saveOrder(Order order) {
+        return orderRepository.save(order);
+    }
+
+    public List<Order> findByAccountId(Long accountId) {
+        return orderRepository.findOrdersByAccountid(accountId);
+    }
+
 }

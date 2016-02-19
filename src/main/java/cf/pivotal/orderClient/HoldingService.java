@@ -13,26 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cf.pivotal.accountClient;
+package cf.pivotal.orderClient;
 
-import feign.Headers;
-import feign.Param;
-import feign.RequestLine;
-import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.RequestBody;
+import java.util.List;
 
-@Repository
-public interface AccountRepository {
+public interface HoldingService {
 
-    @RequestLine("GET /accounts/{id}")
-    Account findOne(@Param(value = "id") Long id);
+    List<Holding> findByAccountid(Long accountId);
 
-    @RequestLine("DELETE /accounts/")
-    @Headers("Content-Type: application/json")
-    void delete(@RequestBody Account account);
+    Holding save(Holding holding);
 
-    @RequestLine("POST /accounts/")
-    @Headers("Content-Type: application/json")
-    Account save(@RequestBody Account account);
+    void delete(Long id);
 
+    Holding find(Long id);
+
+    HoldingSummary findHoldingSummary(Long accountId);
+
+    PortfolioSummary findPortfolioSummary(Long accountId);
 }
