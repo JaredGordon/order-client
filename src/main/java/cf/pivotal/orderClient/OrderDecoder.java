@@ -7,17 +7,13 @@ import feign.FeignException;
 import feign.Response;
 import feign.gson.GsonDecoder;
 import net.minidev.json.JSONArray;
-import org.apache.log4j.Logger;
+import net.minidev.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class OrderDecoder extends GsonDecoder {
 
@@ -27,10 +23,7 @@ public class OrderDecoder extends GsonDecoder {
     private static final Type LIST_OF_HOLDINGS = new TypeToken<List<Holding>>() {
     }.getType();
 
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-
-    private static final Logger LOG = Logger.getLogger(OrderDecoder.class);
+    private final JsonUtils jsonUtils = new JsonUtils();
 
     @Override
     public Object decode(Response response, Type type) throws IOException,
@@ -48,7 +41,7 @@ public class OrderDecoder extends GsonDecoder {
         }
 
         if (LIST_OF_ORDERS.equals(type)) {
-            return ordersFromJson(JsonPath.parse(body.asInputStream()));
+            return ordersFromJson(JsonPath.parse(body.asInputStream()), true);
         }
 
         if (Holding.class.equals(type)) {
@@ -68,16 +61,16 @@ public class OrderDecoder extends GsonDecoder {
         }
 
         Holding h = new Holding();
-        h.setHoldingid(getLongValue(ctx, "$.holdingId"));
-        h.setPurchaseprice(getBigDecimalValue(ctx, "$.purchasePrice"));
-        h.setQuantity(getBigDecimalValue(ctx, "$.quantity"));
-        h.setPurchasedate(getDateValue(ctx, "$.purchaseDate"));
-        h.setAccountAccountid(getLongValue(ctx, "$.accountId"));
-        h.setQuoteSymbol(getStringValue(ctx, "$.quoteSymbol"));
+        h.setHoldingid(jsonUtils.getLongValue(ctx, "$.holdingId"));
+        h.setPurchaseprice(jsonUtils.getBigDecimalValue(ctx, "$.purchasePrice"));
+        h.setQuantity(jsonUtils.getBigDecimalValue(ctx, "$.quantity"));
+        h.setPurchasedate(jsonUtils.getDateValue(ctx, "$.purchaseDate"));
+        h.setAccountAccountid(jsonUtils.getLongValue(ctx, "$.accountId"));
+        h.setQuoteSymbol(jsonUtils.getStringValue(ctx, "$.quoteSymbol"));
 
         JSONArray orders = ctx.read("$.orders");
         if (orders != null && processOrders) {
-            h.setOrders(ordersFromJson(JsonPath.parse(orders.toString())));
+            h.setOrders(ordersFromJson(JsonPath.parse(orders.toString()), false));
             for (Order o : h.getOrders()) {
                 o.setHoldingHoldingid(h);
             }
@@ -93,105 +86,68 @@ public class OrderDecoder extends GsonDecoder {
         for (int i = 0; i < as.size(); i++) {
             Holding h = new Holding();
 
-            h.setHoldingid(getLongValue(ctx, "$.[" + i + "].holdingId"));
-            h.setPurchaseprice(getBigDecimalValue(ctx, "$.[" + i + "].purchasePrice"));
-            h.setQuantity(getBigDecimalValue(ctx, "$.[" + i + "].quantity"));
-            h.setPurchasedate(getDateValue(ctx, "$.[" + i + "].purchaseDate"));
-            h.setAccountAccountid(getLongValue(ctx, "$.[" + i + "].accountId"));
-            h.setQuoteSymbol(getStringValue(ctx, "$.[" + i + "].quoteSymbol"));
+            h.setHoldingid(jsonUtils.getLongValue(ctx, "$.[" + i + "].holdingId"));
+            h.setPurchaseprice(jsonUtils.getBigDecimalValue(ctx, "$.[" + i + "].purchasePrice"));
+            h.setQuantity(jsonUtils.getBigDecimalValue(ctx, "$.[" + i + "].quantity"));
+            h.setPurchasedate(jsonUtils.getDateValue(ctx, "$.[" + i + "].purchaseDate"));
+            h.setAccountAccountid(jsonUtils.getLongValue(ctx, "$.[" + i + "].accountId"));
+            h.setQuoteSymbol(jsonUtils.getStringValue(ctx, "$.[" + i + "].quoteSymbol"));
 
             holdings.add(h);
 
             JSONArray orders = ctx.read("$.[" + i + "].orders");
             if (orders != null) {
-                h.setOrders(ordersFromJson(JsonPath.parse(orders.toString())));
+                h.setOrders(ordersFromJson(JsonPath.parse(orders.toString()), false));
             }
         }
 
         return holdings;
     }
 
-    private String getStringValue(ReadContext ctx, String path) {
-        return ctx.read(path);
-    }
-
-    private Long getLongValue(ReadContext ctx, String path) {
-        Object o = ctx.read(path);
-        if (o == null) {
-            return 0L;
-        }
-        return Long.decode(o.toString());
-    }
-
-    private Integer getIntegerValue(ReadContext ctx, String path) {
-        Object o = ctx.read(path);
-        if (o == null) {
-            return 0;
-        }
-        return Integer.decode(o.toString());
-    }
-
-    private BigDecimal getBigDecimalValue(ReadContext ctx, String path) {
-        Object o = ctx.read(path);
-        if (o == null) {
-            return new BigDecimal(0);
-        }
-        return new BigDecimal(o.toString());
-    }
-
-    private Date getDateValue(ReadContext ctx, String path) {
-        Object o = ctx.read(path);
-        if (o == null) {
-            return null;
-        }
-        try {
-            return DATE_FORMAT.parse(o.toString());
-        } catch (ParseException e) {
-            LOG.error("unable to aprse date string: " + o.toString(), e);
-            return null;
-        }
-    }
-
     private Order orderFromJson(ReadContext ctx) {
         Order o = new Order();
 
-        o.setQuoteid(getStringValue(ctx, "$.quoteSymbol"));
-        o.setQuantity(getBigDecimalValue(ctx, "$.quantity"));
-        o.setPrice(getBigDecimalValue(ctx, "$.price"));
-        o.setAccountid(getLongValue(ctx, "$.accountId"));
-        o.setCompletiondate(getDateValue(ctx, "$.completionDate"));
-        o.setOpendate(getDateValue(ctx, "$.openDate"));
-        o.setOrderfee(getBigDecimalValue(ctx, "$.orderFee"));
-        o.setOrderid(getLongValue(ctx, "$.orderId"));
-        o.setOrderstatus(getStringValue(ctx, "$.orderStatus"));
-        o.setOrdertype(getStringValue(ctx, "$.orderType"));
+        o.setQuoteid(jsonUtils.getStringValue(ctx, "$.quoteSymbol"));
+        o.setQuantity(jsonUtils.getBigDecimalValue(ctx, "$.quantity"));
+        o.setPrice(jsonUtils.getBigDecimalValue(ctx, "$.price"));
+        o.setAccountid(jsonUtils.getLongValue(ctx, "$.accountId"));
+        o.setCompletiondate(jsonUtils.getDateValue(ctx, "$.completionDate"));
+        o.setOpendate(jsonUtils.getDateValue(ctx, "$.openDate"));
+        o.setOrderfee(jsonUtils.getBigDecimalValue(ctx, "$.orderFee"));
+        o.setOrderid(jsonUtils.getLongValue(ctx, "$.orderId"));
+        o.setOrderstatus(jsonUtils.getStringValue(ctx, "$.orderStatus"));
+        o.setOrdertype(jsonUtils.getStringValue(ctx, "$.orderType"));
 
         Object h = ctx.read("$.holding");
         if (h != null) {
-            o.setHoldingHoldingid(holdingFromJson(JsonPath.parse(h.toString()), false));
+            o.setHoldingHoldingid(holdingFromJson(JsonPath.parse(new JSONObject((Map) ctx.read("$.holding")).toJSONString()), false));
         }
 
         return o;
     }
 
-    private List<Order> ordersFromJson(ReadContext ctx) {
+    private List<Order> ordersFromJson(ReadContext ctx, boolean processHoldings) {
         ArrayList<Order> orders = new ArrayList<Order>();
 
         JSONArray as = ctx.read("$");
         for (int i = 0; i < as.size(); i++) {
             Order o = new Order();
 
-        //    o.setHoldingHoldingid(getLongValue(ctx, "$.[" + i + "].accountId"));
-            o.setQuoteid(getStringValue(ctx, "$.[" + i + "].quoteSymbol"));
-            o.setQuantity(getBigDecimalValue(ctx, "$.[" + i + "].quantity"));
-            o.setPrice(getBigDecimalValue(ctx, "$.[" + i + "].price"));
-            o.setAccountid(getLongValue(ctx, "$.[" + i + "].accountId"));
-            o.setCompletiondate(getDateValue(ctx, "$.[" + i + "].completionDate"));
-            o.setOpendate(getDateValue(ctx, "$.[" + i + "].openDate"));
-            o.setOrderfee(getBigDecimalValue(ctx, "$.[" + i + "].orderFee"));
-            o.setOrderid(getLongValue(ctx, "$.[" + i + "].orderId"));
-            o.setOrderstatus(getStringValue(ctx, "$.[" + i + "].orderStatus"));
-            o.setOrdertype(getStringValue(ctx, "$.[" + i + "].orderType"));
+            o.setQuoteid(jsonUtils.getStringValue(ctx, "$.[" + i + "].quoteSymbol"));
+            o.setQuantity(jsonUtils.getBigDecimalValue(ctx, "$.[" + i + "].quantity"));
+            o.setPrice(jsonUtils.getBigDecimalValue(ctx, "$.[" + i + "].price"));
+            o.setAccountid(jsonUtils.getLongValue(ctx, "$.[" + i + "].accountId"));
+            o.setCompletiondate(jsonUtils.getDateValue(ctx, "$.[" + i + "].completionDate"));
+            o.setOpendate(jsonUtils.getDateValue(ctx, "$.[" + i + "].openDate"));
+            o.setOrderfee(jsonUtils.getBigDecimalValue(ctx, "$.[" + i + "].orderFee"));
+            o.setOrderid(jsonUtils.getLongValue(ctx, "$.[" + i + "].orderId"));
+            o.setOrderstatus(jsonUtils.getStringValue(ctx, "$.[" + i + "].orderStatus"));
+            o.setOrdertype(jsonUtils.getStringValue(ctx, "$.[" + i + "].orderType"));
+
+            Object h = ctx.read("$.[" + i + "].holding");
+            if (h != null && processHoldings) {
+                o.setHoldingHoldingid(holdingFromJson(JsonPath.parse(new JSONObject((Map) ctx.read("$.[" + i + "].holding")).toJSONString()), false));
+            }
 
             orders.add(o);
         }

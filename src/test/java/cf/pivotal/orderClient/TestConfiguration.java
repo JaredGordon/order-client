@@ -3,6 +3,7 @@ package cf.pivotal.orderClient;
 import feign.Feign;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import java.math.BigDecimal;
@@ -13,6 +14,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 @Configuration
+@ComponentScan(basePackages={"cf.pivotal.orderClient"})
 public class TestConfiguration {
 
     @Bean

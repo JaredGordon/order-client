@@ -31,13 +31,6 @@ import java.util.List;
 @Repository
 public interface OrderRepository {
 
-    @RequestLine("GET /orders/count")
-    Long count();
-
-    @RequestLine("DELETE /orders/")
-    @Headers("Content-Type: application/json")
-    void delete(@RequestBody Order order);
-
     @RequestLine("GET /orders/{id}")
     Order find(@Param(value = "id") Long id);
 
@@ -45,27 +38,9 @@ public interface OrderRepository {
     @Headers("Content-Type: application/json")
     Order save(@RequestBody Order order);
 
-//    @Modifying
-//    @Transactional
-//    @Query(value = "UPDATE Order o SET o.orderstatus = 'completed' WHERE o.accountid = ?1 AND o.orderstatus = 'closed'")
-//    int updateClosedOrders(Long accountId);
-
-//    @Query("SELECT o FROM Order o WHERE o.orderstatus = ?2 AND o.accountid  = ?1 order by orderid DESC")
-//    List<Order> findOrdersByStatus(Long accountId, String status);
-
-    // @Query("SELECT o FROM Order o WHERE o.accountid  = ?1 order by orderid DESC")
-    @RequestLine("GET /orders/accounts/{accountId}")
+    @RequestLine("GET /orders?accountId={accountId}")
     List<Order> findOrdersByAccountid(@Param(value = "accountId") Long accountId);
 
-//    @Query("SELECT o FROM Order o WHERE o.orderid = ?1 AND o.accountid  = ?2")
-//    @RequestLine("GET /orders/{orderId}/account/{accountId}")
-//    List<Order>  findByOrderidAndAccountAccountid(@Param(value = "orderId") Long orderId, @Param(value = "accountId") Long accountId);
-
-//    @Query("SELECT count(o) FROM Order o WHERE o.accountid  = ?1")
-//    @RequestLine("GET /orders/account/{accountId}/count")
-//    Long findCountOfOrders(@Param(value = "accountId") Long accountId);
-
-//    @Query("SELECT count(o) FROM Order o WHERE o.accountid  = ?1 and o.orderstatus = ?2")
-//    Long findCountOfOrders(Long accountId, String status);
-
+    @RequestLine("GET /orders?accountId={accountId}&orderStatus={status}")
+    List<Order> findOrdersByAccountidAndStatus(@Param(value = "accountId") Long accountId, @Param(value = "status") String status);
 }

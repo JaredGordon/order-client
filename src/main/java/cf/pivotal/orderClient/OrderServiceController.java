@@ -38,4 +38,8 @@ public class OrderServiceController implements OrderService {
         return orderRepository.findOrdersByAccountid(accountId);
     }
 
+    public List<Order> findByAccountIdAndStatus(Long accountId, String status) {
+        return orderRepository.findOrdersByAccountidAndStatus(accountId, status);
+    }
+
 }
